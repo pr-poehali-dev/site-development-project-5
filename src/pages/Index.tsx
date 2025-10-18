@@ -184,7 +184,7 @@ const Index = () => {
                 <div className="flex items-center gap-4">
                   <label className="text-sm font-medium">Сумма ставки:</label>
                   <div className="flex gap-2 flex-wrap">
-                    {[100, 500, 1000, 5000, 10000].map(amount => (
+                    {[100, 500, 1000, 5000, 9999, 10000].map(amount => (
                       <Button
                         key={amount}
                         variant={betAmount === amount ? 'default' : 'outline'}
