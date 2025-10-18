@@ -33,6 +33,7 @@ interface HistoryItem {
 const Index = () => {
   const [balance, setBalance] = useState(10000);
   const [hasHouse, setHasHouse] = useState(true);
+  const [hasVanya, setHasVanya] = useState(true);
   const [currentBet, setCurrentBet] = useState<Bet | null>(null);
   const [betAmount, setBetAmount] = useState(100);
   const [isSpinning, setIsSpinning] = useState(false);
@@ -41,7 +42,7 @@ const Index = () => {
   const { toast } = useToast();
 
   const placeBet = (type: 'red' | 'black' | 'number', value: number | null = null) => {
-    if (betAmount > balance && betAmount !== 999999) {
+    if (betAmount > balance && betAmount !== 999999 && betAmount !== 888888) {
       toast({ title: 'Недостаточно средств', variant: 'destructive' });
       return;
     }
@@ -49,16 +50,22 @@ const Index = () => {
       toast({ title: 'У вас нет дома!', variant: 'destructive' });
       return;
     }
+    if (betAmount === 888888 && !hasVanya) {
+      toast({ title: 'У вас нет Вани!', variant: 'destructive' });
+      return;
+    }
     setCurrentBet({ type, value, amount: betAmount });
-    if (betAmount !== 999999) {
+    if (betAmount !== 999999 && betAmount !== 888888) {
       setBalance(balance - betAmount);
-    } else {
+    } else if (betAmount === 999999) {
       setHasHouse(false);
+    } else if (betAmount === 888888) {
+      setHasVanya(false);
     }
     toast({ 
-      title: betAmount === 999999 ? '🏠 Дом поставлен на кон!' : 'Ставка принята', 
-      description: betAmount === 999999 ? `Ставка: ДОМ на ${type === 'number' ? `число ${value}` : type === 'red' ? 'красное' : 'чёрное'}` : `${betAmount}₽ на ${type === 'number' ? `число ${value}` : type === 'red' ? 'красное' : 'чёрное'}`,
-      className: betAmount === 999999 ? 'bg-destructive border-casino-gold' : ''
+      title: betAmount === 999999 ? '🏠 Дом поставлен на кон!' : betAmount === 888888 ? '👤 Ваня поставлен на кон!' : 'Ставка принята', 
+      description: betAmount === 999999 ? `Ставка: ДОМ на ${type === 'number' ? `число ${value}` : type === 'red' ? 'красное' : 'чёрное'}` : betAmount === 888888 ? `Ставка: ВАНЯ на ${type === 'number' ? `число ${value}` : type === 'red' ? 'красное' : 'чёрное'}` : `${betAmount}₽ на ${type === 'number' ? `число ${value}` : type === 'red' ? 'красное' : 'чёрное'}`,
+      className: (betAmount === 999999 || betAmount === 888888) ? 'bg-destructive border-casino-gold' : ''
     });
   };
 
@@ -96,6 +103,14 @@ const Index = () => {
             description: `Выпало ${result.num} (${result.color === 'red' ? 'красное' : result.color === 'black' ? 'чёрное' : 'зелёное'}). Дом остаётся ваш + ${winAmount}₽!`,
             className: 'bg-casino-green border-casino-gold text-lg font-bold'
           });
+        } else if (currentBet.amount === 888888) {
+          setHasVanya(true);
+          setBalance(balance + winAmount);
+          toast({ 
+            title: '🎉👤 ВАНЯ СПАСЁН!', 
+            description: `Выпало ${result.num} (${result.color === 'red' ? 'красное' : result.color === 'black' ? 'чёрное' : 'зелёное'}). Ваня остаётся с вами + ${winAmount}₽!`,
+            className: 'bg-casino-green border-casino-gold text-lg font-bold'
+          });
         } else {
           setBalance(balance + winAmount);
           toast({ 
@@ -109,6 +124,13 @@ const Index = () => {
           toast({ 
             title: '💔 ДОМ ПРОИГРАН!', 
             description: `Выпало ${result.num} (${result.color === 'red' ? 'красное' : result.color === 'black' ? 'чёрное' : 'зелёное'}). Вы остались без дома...`,
+            variant: 'destructive',
+            className: 'text-lg font-bold'
+          });
+        } else if (currentBet.amount === 888888) {
+          toast({ 
+            title: '💔 ВАНЯ ПРОИГРАН!', 
+            description: `Выпало ${result.num} (${result.color === 'red' ? 'красное' : result.color === 'black' ? 'чёрное' : 'зелёное'}). Ваня теперь не ваш...`,
             variant: 'destructive',
             className: 'text-lg font-bold'
           });
@@ -213,15 +235,15 @@ const Index = () => {
                 <div className="flex items-center gap-4">
                   <label className="text-sm font-medium">Сумма ставки:</label>
                   <div className="flex gap-2 flex-wrap">
-                    {[100, 500, 1000, 5000, 9999, 10000, 999999].map(amount => (
+                    {[100, 500, 1000, 5000, 9999, 10000, 888888, 999999].map(amount => (
                       <Button
                         key={amount}
                         variant={betAmount === amount ? 'default' : 'outline'}
                         onClick={() => setBetAmount(amount)}
                         size="sm"
-                        className={amount === 999999 ? 'bg-destructive hover:bg-destructive/90 text-white font-bold' : ''}
+                        className={(amount === 999999 || amount === 888888) ? 'bg-destructive hover:bg-destructive/90 text-white font-bold' : ''}
                       >
-                        {amount === 999999 ? '🏠 ДОМ' : `${amount}₽`}
+                        {amount === 999999 ? '🏠 ДОМ' : amount === 888888 ? '👤 ВАНЯ' : `${amount}₽`}
                       </Button>
                     ))}
                   </div>
@@ -276,11 +298,19 @@ const Index = () => {
                 Баланс
               </h3>
               <p className="text-4xl font-bold text-casino-gold">{balance.toLocaleString()}₽</p>
-              <div className="mt-2 flex items-center gap-2">
-                <Icon name="Home" size={20} className={hasHouse ? 'text-casino-green' : 'text-muted-foreground'} />
-                <span className={`text-sm font-medium ${hasHouse ? 'text-casino-green' : 'text-muted-foreground line-through'}`}>
-                  {hasHouse ? 'Дом в наличии' : 'Дома нет'}
-                </span>
+              <div className="mt-2 space-y-1">
+                <div className="flex items-center gap-2">
+                  <Icon name="Home" size={20} className={hasHouse ? 'text-casino-green' : 'text-muted-foreground'} />
+                  <span className={`text-sm font-medium ${hasHouse ? 'text-casino-green' : 'text-muted-foreground line-through'}`}>
+                    {hasHouse ? 'Дом в наличии' : 'Дома нет'}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Icon name="User" size={20} className={hasVanya ? 'text-casino-green' : 'text-muted-foreground'} />
+                  <span className={`text-sm font-medium ${hasVanya ? 'text-casino-green' : 'text-muted-foreground line-through'}`}>
+                    {hasVanya ? 'Ваня в наличии' : 'Вани нет'}
+                  </span>
+                </div>
               </div>
               {currentBet && (
                 <div className="mt-4 p-3 bg-muted rounded-lg">
