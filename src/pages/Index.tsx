@@ -35,6 +35,7 @@ const Index = () => {
   const [hasHouse, setHasHouse] = useState(true);
   const [hasVanya, setHasVanya] = useState(true);
   const [hasAlina, setHasAlina] = useState(true);
+  const [hasKirill, setHasKirill] = useState(true);
   const [currentBet, setCurrentBet] = useState<Bet | null>(null);
   const [betAmount, setBetAmount] = useState(100);
   const [isSpinning, setIsSpinning] = useState(false);
@@ -43,7 +44,7 @@ const Index = () => {
   const { toast } = useToast();
 
   const placeBet = (type: 'red' | 'black' | 'number', value: number | null = null) => {
-    if (betAmount > balance && betAmount !== 999999 && betAmount !== 888888 && betAmount !== 777777) {
+    if (betAmount > balance && betAmount !== 999999 && betAmount !== 888888 && betAmount !== 777777 && betAmount !== 666666) {
       toast({ title: 'Недостаточно средств', variant: 'destructive' });
       return;
     }
@@ -59,8 +60,12 @@ const Index = () => {
       toast({ title: 'У вас нет Алины!', variant: 'destructive' });
       return;
     }
+    if (betAmount === 666666 && !hasKirill) {
+      toast({ title: 'У вас нет Кирилла!', variant: 'destructive' });
+      return;
+    }
     setCurrentBet({ type, value, amount: betAmount });
-    if (betAmount !== 999999 && betAmount !== 888888 && betAmount !== 777777) {
+    if (betAmount !== 999999 && betAmount !== 888888 && betAmount !== 777777 && betAmount !== 666666) {
       setBalance(balance - betAmount);
     } else if (betAmount === 999999) {
       setHasHouse(false);
@@ -68,11 +73,13 @@ const Index = () => {
       setHasVanya(false);
     } else if (betAmount === 777777) {
       setHasAlina(false);
+    } else if (betAmount === 666666) {
+      setHasKirill(false);
     }
     toast({ 
-      title: betAmount === 999999 ? '🏠 Дом поставлен на кон!' : betAmount === 888888 ? '👤 Ваня поставлен на кон!' : betAmount === 777777 ? '💃 Алина поставлена на кон!' : 'Ставка принята', 
-      description: betAmount === 999999 ? `Ставка: ДОМ на ${type === 'number' ? `число ${value}` : type === 'red' ? 'красное' : 'чёрное'}` : betAmount === 888888 ? `Ставка: ВАНЯ на ${type === 'number' ? `число ${value}` : type === 'red' ? 'красное' : 'чёрное'}` : betAmount === 777777 ? `Ставка: АЛИНА на ${type === 'number' ? `число ${value}` : type === 'red' ? 'красное' : 'чёрное'}` : `${betAmount}₽ на ${type === 'number' ? `число ${value}` : type === 'red' ? 'красное' : 'чёрное'}`,
-      className: (betAmount === 999999 || betAmount === 888888 || betAmount === 777777) ? 'bg-destructive border-casino-gold' : ''
+      title: betAmount === 999999 ? '🏠 Дом поставлен на кон!' : betAmount === 888888 ? '👤 Ваня поставлен на кон!' : betAmount === 777777 ? '💃 Алина поставлена на кон!' : betAmount === 666666 ? '😈 Кирилл поставлен на кон!' : 'Ставка принята', 
+      description: betAmount === 999999 ? `Ставка: ДОМ на ${type === 'number' ? `число ${value}` : type === 'red' ? 'красное' : 'чёрное'}` : betAmount === 888888 ? `Ставка: ВАНЯ на ${type === 'number' ? `число ${value}` : type === 'red' ? 'красное' : 'чёрное'}` : betAmount === 777777 ? `Ставка: АЛИНА на ${type === 'number' ? `число ${value}` : type === 'red' ? 'красное' : 'чёрное'}` : betAmount === 666666 ? `Ставка: КИРИЛЛ на ${type === 'number' ? `число ${value}` : type === 'red' ? 'красное' : 'чёрное'}` : `${betAmount}₽ на ${type === 'number' ? `число ${value}` : type === 'red' ? 'красное' : 'чёрное'}`,
+      className: (betAmount === 999999 || betAmount === 888888 || betAmount === 777777 || betAmount === 666666) ? 'bg-destructive border-casino-gold' : ''
     });
   };
 
@@ -126,6 +133,14 @@ const Index = () => {
             description: `Выпало ${result.num} (${result.color === 'red' ? 'красное' : result.color === 'black' ? 'чёрное' : 'зелёное'}). Алина остаётся с вами + ${winAmount}₽!`,
             className: 'bg-casino-green border-casino-gold text-lg font-bold'
           });
+        } else if (currentBet.amount === 666666) {
+          setHasKirill(true);
+          setBalance(balance + winAmount);
+          toast({ 
+            title: '🎉😈 КИРИЛЛ СПАСЁН!', 
+            description: `Выпало ${result.num} (${result.color === 'red' ? 'красное' : result.color === 'black' ? 'чёрное' : 'зелёное'}). Кирилл остаётся с вами + ${winAmount}₽!`,
+            className: 'bg-casino-green border-casino-gold text-lg font-bold'
+          });
         } else {
           setBalance(balance + winAmount);
           toast({ 
@@ -153,6 +168,13 @@ const Index = () => {
           toast({ 
             title: '💔 АЛИНА ПРОИГРАНА!', 
             description: `Выпало ${result.num} (${result.color === 'red' ? 'красное' : result.color === 'black' ? 'чёрное' : 'зелёное'}). Алина теперь не ваша...`,
+            variant: 'destructive',
+            className: 'text-lg font-bold'
+          });
+        } else if (currentBet.amount === 666666) {
+          toast({ 
+            title: '💔 КИРИЛЛ ПРОИГРАН!', 
+            description: `Выпало ${result.num} (${result.color === 'red' ? 'красное' : result.color === 'black' ? 'чёрное' : 'зелёное'}). Кирилл теперь не ваш...`,
             variant: 'destructive',
             className: 'text-lg font-bold'
           });
@@ -257,15 +279,15 @@ const Index = () => {
                 <div className="flex items-center gap-4">
                   <label className="text-sm font-medium">Сумма ставки:</label>
                   <div className="flex gap-2 flex-wrap">
-                    {[100, 500, 1000, 5000, 9999, 10000, 777777, 888888, 999999].map(amount => (
+                    {[100, 500, 1000, 5000, 9999, 10000, 666666, 777777, 888888, 999999].map(amount => (
                       <Button
                         key={amount}
                         variant={betAmount === amount ? 'default' : 'outline'}
                         onClick={() => setBetAmount(amount)}
                         size="sm"
-                        className={(amount === 999999 || amount === 888888 || amount === 777777) ? 'bg-destructive hover:bg-destructive/90 text-white font-bold' : ''}
+                        className={(amount === 999999 || amount === 888888 || amount === 777777 || amount === 666666) ? 'bg-destructive hover:bg-destructive/90 text-white font-bold' : ''}
                       >
-                        {amount === 999999 ? '🏠 ДОМ' : amount === 888888 ? '👤 ВАНЯ' : amount === 777777 ? '💃 АЛИНА' : `${amount}₽`}
+                        {amount === 999999 ? '🏠 ДОМ' : amount === 888888 ? '👤 ВАНЯ' : amount === 777777 ? '💃 АЛИНА' : amount === 666666 ? '😈 КИРИЛЛ' : `${amount}₽`}
                       </Button>
                     ))}
                   </div>
@@ -337,6 +359,12 @@ const Index = () => {
                   <Icon name="Heart" size={20} className={hasAlina ? 'text-casino-green' : 'text-muted-foreground'} />
                   <span className={`text-sm font-medium ${hasAlina ? 'text-casino-green' : 'text-muted-foreground line-through'}`}>
                     {hasAlina ? 'Алина в наличии' : 'Алины нет'}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Icon name="Skull" size={20} className={hasKirill ? 'text-casino-green' : 'text-muted-foreground'} />
+                  <span className={`text-sm font-medium ${hasKirill ? 'text-casino-green' : 'text-muted-foreground line-through'}`}>
+                    {hasKirill ? 'Кирилл в наличии' : 'Кирилла нет'}
                   </span>
                 </div>
               </div>
